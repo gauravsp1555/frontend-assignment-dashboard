@@ -23,9 +23,14 @@ export default function LoginPage() {
                 password,
             });
 
-            if (res.data?.token) {
-                localStorage.setItem("token", res.data.token);
+
+            const actualToken = res.data.accessToken || res.data.token;
+
+            if (actualToken) {
+                localStorage.setItem("token", actualToken);
                 router.push("/");
+            } else {
+                setError("Token could not be retrieved. Please try again.");
             }
         } catch (err) {
             setError(err.response?.data?.message || "Invalid credentials. Please try again.");
@@ -80,8 +85,8 @@ export default function LoginPage() {
                     type="submit"
                     disabled={isLoading}
                     className={`w-full py-2.5 px-4 text-white font-medium rounded-md transition-colors ${isLoading
-                            ? "bg-indigo-400 cursor-not-allowed"
-                            : "bg-indigo-600 hover:bg-indigo-700"
+                        ? "bg-indigo-400 cursor-not-allowed"
+                        : "bg-indigo-600 hover:bg-indigo-700"
                         }`}
                 >
                     {isLoading ? "Signing in..." : "Sign in"}

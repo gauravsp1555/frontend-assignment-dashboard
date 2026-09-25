@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "../utils/axios";
 
-// TypeScript interface
 interface Product {
   id: number;
   title: string;
@@ -20,6 +19,11 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -29,16 +33,29 @@ export default function Dashboard() {
       return;
     }
 
-    fetchProducts();
-  }, [router]);
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageFromUrl = parseInt(urlParams.get("page") || "1", 10);
+    const limitFromUrl = parseInt(urlParams.get("limit") || "10", 10);
 
-  const fetchProducts = async () => {
+    setCurrentPage(pageFromUrl);
+    setLimit(limitFromUrl);
+
+    fetchProducts(pageFromUrl, limitFromUrl);
+  }, []);
+
+  const fetchProducts = async (page: number, currentLimit: number) => {
     setIsLoading(true);
     setError("");
 
     try {
-      const res = await axiosInstance.get("/products?limit=10&skip=0");
+      const skip = (page - 1) * currentLimit;
+      const res = await axiosInstance.get(`/products?limit=${currentLimit}&skip=${skip}`);
+
       setProducts(res.data.products);
+      setTotalItems(res.data.total);
+
+      // पेज न रिफ्रेश करता URL अपडेट करणे
+      router.replace(`/?page=${page}&limit=${currentLimit}`);
     } catch (err) {
       setError("Failed to fetch products.");
     } finally {
@@ -51,7 +68,19 @@ export default function Dashboard() {
     router.push("/login");
   };
 
-  if (isLoading) {
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchProducts(newPage, limit);
+  };
+
+  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLimit = parseInt(e.target.value, 10);
+    setLimit(newLimit);
+    setCurrentPage(1);
+    fetchProducts(1, newLimit);
+  };
+
+  if (isLoading && products.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -76,7 +105,7 @@ export default function Dashboard() {
           <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 text-center">
             <p className="text-red-600 mb-4">{error}</p>
             <button
-              onClick={fetchProducts}
+              onClick={() => fetchProducts(currentPage, limit)}
               className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
             >
               Retry
@@ -132,6 +161,49 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between bg-white px-4 py-3 border border-gray-200 rounded-lg shadow-sm gap-4">
+
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="limit" className="text-sm font-medium text-gray-700">Per page:</label>
+                  <select
+                    id="limit"
+                    value={limit}
+                    onChange={handleLimitChange}
+                    className="border border-gray-300 rounded-md text-sm py-1.5 px-3 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <p className="text-sm text-gray-700 hidden sm:block">
+                  Showing <span className="font-medium">{totalItems === 0 ? 0 : ((currentPage - 1) * limit) + 1}</span> to{" "}
+                  <span className="font-medium">{Math.min(currentPage * limit, totalItems)}</span> of{" "}
+                  <span className="font-medium">{totalItems}</span>
+                </p>
+              </div>
+
+              <div className="flex justify-between w-full sm:w-auto gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage * limit >= totalItems || isLoading}
+                  className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </>
         )}
