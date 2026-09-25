@@ -25,7 +25,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // पेजिनेशन, सर्च आणि फिल्टरसाठी लागणाऱ्या गोष्टी
+  // State for pagination, search, and filtering
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
@@ -33,7 +33,7 @@ export default function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortBy, setSortBy] = useState("");
 
-  // नवीन जोडणे (Add), बदलणे (Edit), काढून टाकणे (Delete) यासाठी लागणाऱ्या गोष्टी
+  // State for Add, Edit, and Delete operations
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({ title: "", category: "", price: 0, stock: 0 });
@@ -76,7 +76,7 @@ export default function Dashboard() {
         setCategories(formattedCategories);
       }
     } catch (error) {
-      console.error("कॅटेगरी मिळवण्यात अडचण आली");
+      console.error("Error fetching categories");
     }
   };
 
@@ -108,13 +108,13 @@ export default function Dashboard() {
       if (sort) params.set("sortBy", sort);
       router.replace(`/?${params.toString()}`);
     } catch (err) {
-      setError("प्रॉडक्ट्सची माहिती मिळवण्यात अडचण आली.");
+      setError("Failed to fetch products.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- Add, Edit, Delete चे काम ---
+  // --- Add, Edit, Delete operations ---
   const handleOpenForm = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
@@ -131,17 +131,17 @@ export default function Dashboard() {
     setIsSubmitting(true);
     try {
       if (editingProduct) {
-        // प्रॉडक्ट बदलण्यासाठी API कॉल (Edit)
+        // API call to edit product (Edit)
         const res = await axiosInstance.put(`/products/${editingProduct.id}`, formData);
         setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...res.data } : p));
       } else {
-        // नवीन प्रॉडक्ट जोडण्यासाठी API कॉल (Add)
+        // API call to add new product (Add)
         const res = await axiosInstance.post('/products/add', formData);
         setProducts([{ ...res.data, thumbnail: 'https://cdn.dummyjson.com/product-images/1/thumbnail.jpg', rating: 0 }, ...products]);
       }
       setIsFormOpen(false);
     } catch (error) {
-      alert("माहिती साठवताना काहीतरी चूक झाली!");
+      alert("Something went wrong while saving data!");
     } finally {
       setIsSubmitting(false);
     }
@@ -151,12 +151,12 @@ export default function Dashboard() {
     if (!productToDelete) return;
     setIsSubmitting(true);
     try {
-      // प्रॉडक्ट काढून टाकण्यासाठी API कॉल (Delete)
+      // API call to delete product (Delete)
       await axiosInstance.delete(`/products/${productToDelete}`);
       setProducts(products.filter(p => p.id !== productToDelete));
       setProductToDelete(null);
     } catch (error) {
-      alert("प्रॉडक्ट काढून टाकण्यात अडचण आली!");
+      alert("Failed to delete product!");
     } finally {
       setIsSubmitting(false);
     }
@@ -200,7 +200,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* सर्च आणि फिल्टर */}
+        {/* Search and Filters */}
         <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <input
@@ -239,7 +239,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* मुख्य प्रॉडक्ट्सची यादी */}
+        {/* Main Products List */}
         {error ? (
           <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 text-center text-red-600">{error}</div>
         ) : (
@@ -305,7 +305,7 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* पेजिनेशन */}
+            {/* Pagination */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-between bg-white px-4 py-3 border border-gray-200 rounded-lg shadow-sm gap-4">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <label className="text-sm text-gray-700">Per page:</label>
@@ -324,7 +324,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* माहिती भरण्यासाठी फॉर्म (Modal) */}
+      {/* Form Modal for adding/editing product */}
       {isFormOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
@@ -357,12 +357,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* प्रॉडक्ट काढून टाकण्यासाठी पॉप-अप (Modal) */}
+      {/* Confirmation Modal for deleting product */}
       {productToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl text-center">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Product?</h3>
-            <p className="text-gray-500 mb-6 text-sm">तुम्हाला खात्री आहे का की तुम्हाला हे प्रॉडक्ट काढून टाकायचे आहे?</p>
+            <p className="text-gray-500 mb-6 text-sm">Are you sure you want to delete this product?</p>
             <div className="flex justify-center gap-3">
               <button onClick={() => setProductToDelete(null)} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button>
               <button onClick={handleDelete} disabled={isSubmitting} className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50">{isSubmitting ? "Deleting..." : "Yes, Delete"}</button>

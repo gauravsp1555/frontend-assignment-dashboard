@@ -23,7 +23,7 @@ interface ProductDetail {
 export default function ProductDetails() {
     const params = useParams();
     const router = useRouter();
-    // URL मधील id घेणे
+    // Get id from URL
     const id = params.id;
 
     const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -36,7 +36,7 @@ export default function ProductDetails() {
                 const res = await axiosInstance.get(`/products/${id}`);
                 setProduct(res.data);
             } catch (err: any) {
-                // जर प्रॉडक्ट सापडला नाही तर 404 एरर हँडल करणे
+                // Handle 404 error if product is not found
                 if (err.response?.status === 404) {
                     setError("Product not found. The ID you entered is incorrect.");
                 } else {
@@ -60,7 +60,7 @@ export default function ProductDetails() {
         );
     }
 
-    // Not Found किंवा Error स्टेट
+    // Not Found or Error state
     if (error || !product) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
