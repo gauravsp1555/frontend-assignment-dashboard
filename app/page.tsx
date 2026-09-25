@@ -68,7 +68,6 @@ export default function Dashboard() {
     try {
       const res = await axiosInstance.get("/products/categories");
       if (res.data && res.data.length > 0) {
-        // DummyJSON returns array of objects {slug, name} or array of strings depending on version
         const formattedCategories = typeof res.data[0] === 'string'
           ? res.data.map((c: string) => ({ slug: c, name: c }))
           : res.data;
@@ -98,7 +97,6 @@ export default function Dashboard() {
     try {
       const skip = (page - 1) * currentLimit;
 
-      // Handle Endpoint based on Search vs Category (API Constraint)
       let endpoint = "/products";
       if (search) {
         endpoint = `/products/search?q=${search}`;
@@ -120,7 +118,6 @@ export default function Dashboard() {
       setProducts(res.data.products);
       setTotalItems(res.data.total);
 
-      // Update URL silently
       const params = new URLSearchParams();
       params.set("page", page.toString());
       params.set("limit", currentLimit.toString());
@@ -139,13 +136,13 @@ export default function Dashboard() {
   // Event Handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setSelectedCategory(""); // Clear category when searching
+    setSelectedCategory("");
     setCurrentPage(1);
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
-    setSearchQuery(""); // Clear search when selecting category
+    setSearchQuery("");
     setCurrentPage(1);
   };
 
@@ -168,6 +165,11 @@ export default function Dashboard() {
     router.push("/login");
   };
 
+  // Navigating to the product details page
+  const navigateToDetails = (id: number) => {
+    router.push(`/products/${id}`);
+  };
+
   if (isLoading && products.length === 0 && !searchQuery && !selectedCategory) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -183,7 +185,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Products Dashboard</h1>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+            className="px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors font-medium"
           >
             Logout
           </button>
@@ -267,7 +269,11 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50 cursor-pointer">
+                    <tr
+                      key={product.id}
+                      onClick={() => navigateToDetails(product.id)}
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap flex items-center gap-3">
                         <img src={product.thumbnail} alt={product.title} className="w-10 h-10 rounded-md object-cover" />
                         <span className="text-sm font-medium text-gray-900">{product.title}</span>
@@ -289,7 +295,11 @@ export default function Dashboard() {
                 </div>
               )}
               {products.map((product) => (
-                <div key={product.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex gap-4">
+                <div
+                  key={product.id}
+                  onClick={() => navigateToDetails(product.id)}
+                  className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                >
                   <img src={product.thumbnail} alt={product.title} className="w-20 h-20 rounded-md object-cover" />
                   <div className="flex-1">
                     <h3 className="text-sm font-medium text-gray-900">{product.title}</h3>
