@@ -28,7 +28,6 @@ export default function LoginPage() {
                 router.push("/");
             }
         } catch (err) {
-            // Show actual API error if available, else generic fallback
             setError(err.response?.data?.message || "Invalid credentials. Please try again.");
         } finally {
             setIsLoading(false);
